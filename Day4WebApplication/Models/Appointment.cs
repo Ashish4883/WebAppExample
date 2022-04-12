@@ -19,6 +19,8 @@ namespace Day4WebApplication.Models
         public Doctor doc { get; set; }
         public DateTime Date { get; set; }
         public int appointTime { get; set; }
+
+        
     }
 
     [ComplexType]
@@ -27,5 +29,7 @@ namespace Day4WebApplication.Models
         public int val { get; set; }
         public int txt { get; set; }
     }
-    
+
+
+
 }

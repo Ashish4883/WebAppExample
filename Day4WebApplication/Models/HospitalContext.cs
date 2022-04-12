@@ -13,5 +13,6 @@ namespace Day4WebApplication.Models
         public DbSet<Appointment> appointment { get; set; }
 
         public System.Data.Entity.DbSet<Schedule> Schedules { get; set; }
+
     }
 }

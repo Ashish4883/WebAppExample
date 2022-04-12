@@ -40,21 +40,28 @@ namespace Day4WebApplication.Controllers
         // GET: Appointments/Create
         public ActionResult Create()
         {
+            List<Times> tlist = new List<Times>();
+            var specList = db.doctor.Select(e => new
+            {
+                id = e.speciality,
+                name = e.speciality
+            });
+
             ViewBag.DoctorID = new SelectList(db.doctor, "id", "name");
             ViewBag.PatientID = new SelectList(db.patient, "id", "name");
+            ViewBag.appointTime = new SelectList(tlist,"val","txt");           
+           
             return View();
         }
 
         // POST: Appointments/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-
-        public JsonResult FetchSchedule(string date, int docid)
+        
+       
+        public JsonResult FetchSchedule(DateTime date, int docid)
         {
-            DateTime dt = Convert.ToDateTime(date);
-            string DOW = dt.ToString("ddd");
+            string DOW = date.ToString("ddd");
             string schedule = db.Schedules.Single(e => e.docID == docid).sch;
             string[] sch = schedule.Split(',');
             string docSchedule = "";
@@ -71,25 +78,37 @@ namespace Day4WebApplication.Controllers
             int start = int.Parse(startend[0]);
             int end = int.Parse(startend[1]);
             List<Times> tlist = new List<Times>();
+            List<Appointment> booked = db.appointment.Where(e => e.DoctorID == docid && e.Date == date).ToList();
+            int[] time2 = new int[booked.Count];
+            int count = 0;
+            foreach (Appointment a in booked)
+            {
+                time2[count] = a.appointTime;
+                count++;
+            }
             for (int i = 0; i < end - start; i++)
             {
                 Times t = new Times();
-                t.txt = start + i;
-                t.val = start + i;
-                tlist.Add(t);
+                if (!time2.Contains(start + i))
+                {
+                    t.txt = start + i;
+                    t.val = start + i;
+                    tlist.Add(t);
+                }
             }
             var tms = tlist.Select(e => new
             {
                 txt = e.txt,
                 val = e.val
             });
-            return Json(tms);
+            return Json(tms,JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,PatientID,DoctorID,Date")] Appointment appointment)
+        public ActionResult Create([Bind(Include = "Id,PatientID,DoctorID,Date,appointTime")] Appointment appointment)
         {
+            List<Times> tlist = new List<Times>();
             if (ModelState.IsValid)
             {
                 db.appointment.Add(appointment);
@@ -99,6 +118,9 @@ namespace Day4WebApplication.Controllers
 
             ViewBag.DoctorID = new SelectList(db.doctor, "id", "name", appointment.DoctorID);
             ViewBag.PatientID = new SelectList(db.patient, "id", "name", appointment.PatientID);
+            ViewBag.appointTime = new SelectList(tlist, "val", "txt");
+
+
             return View(appointment);
 
         }
